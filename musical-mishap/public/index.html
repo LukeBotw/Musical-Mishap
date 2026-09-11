@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Musical Mishap</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎛️</text></svg>">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="toast" class="toast" hidden></div>
+<div id="reactions" class="reactions" aria-hidden="true"></div>
+
+<!-- ------------------------------------------------------------- HOME -->
+<section id="screen-home" class="screen active">
+  <div class="home-wrap">
+    <h1 class="logo">MUSICAL<span>MISHAP</span></h1>
+    <p class="tagline">Everyone gets two minutes to write a banger. Then you all vote.</p>
+
+    <div class="card home-card">
+      <label class="field">
+        <span>Your name</span>
+        <input id="input-name" maxlength="16" placeholder="DJ Nobody" autocomplete="off">
+      </label>
+
+      <button id="btn-create" class="btn big primary">Create a room</button>
+
+      <div class="or"><span>or</span></div>
+
+      <div class="join-row">
+        <input id="input-code" maxlength="4" placeholder="CODE" autocomplete="off" spellcheck="false">
+        <button id="btn-join" class="btn big">Join</button>
+      </div>
+      <p id="home-error" class="error" hidden></p>
+    </div>
+
+    <details class="how">
+      <summary>How it works</summary>
+      <ol>
+        <li>Everyone gets the same silly theme, like <em>a duck with a briefcase</em>.</li>
+        <li>You get two minutes in the studio. Drums, bass, melody. Notes are locked to the key, so nothing sounds truly awful.</li>
+        <li>All the tracks play back one at a time. Everyone rates each one out of five &mdash; except your own.</li>
+        <li>Highest total after the last round wins.</li>
+      </ol>
+    </details>
+  </div>
+</section>
+
+<!-- ------------------------------------------------------------ LOBBY -->
+<section id="screen-lobby" class="screen">
+  <div class="lobby-wrap">
+    <div class="card">
+      <p class="muted small">Room code &mdash; share it</p>
+      <div class="code-display">
+        <span id="room-code">----</span>
+        <button id="btn-copy" class="btn ghost small">Copy link</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Players <span id="player-count" class="muted"></span></h2>
+      <ul id="lobby-players" class="player-list"></ul>
+    </div>
+
+    <div class="card" id="host-settings">
+      <h2>Settings</h2>
+      <label class="field row">
+        <span>Mode</span>
+        <select id="set-mode">
+          <option value="clash">Clash &mdash; everyone writes their own</option>
+          <option value="jam">Jam &mdash; one song, passed around</option>
+        </select>
+      </label>
+      <p class="muted small mode-blurb" id="mode-blurb"></p>
+      <label class="field row" id="row-rounds">
+        <span>Rounds</span>
+        <input id="set-rounds" type="number" min="1" max="8" value="3">
+      </label>
+      <label class="field row" id="row-turns" hidden>
+        <span>Turns until done</span>
+        <input id="set-turns" type="number" min="1" max="12" value="5">
+      </label>
+      <label class="field row">
+        <span>Studio time</span>
+        <select id="set-time">
+          <option value="60">60 seconds</option>
+          <option value="90">90 seconds</option>
+          <option value="120" selected>2 minutes</option>
+          <option value="180">3 minutes</option>
+          <option value="300">5 minutes</option>
+        </select>
+      </label>
+      <button id="btn-start" class="btn big primary">Start the mishap</button>
+      <p class="muted small" id="lobby-hint"></p>
+    </div>
+  </div>
+</section>
+
+<!-- --------------------------------------------------------- COUNTDOWN -->
+<section id="screen-countdown" class="screen">
+  <div class="center-wrap">
+    <p class="muted">Round <span id="cd-round"></span> &mdash; your theme is</p>
+    <h1 id="cd-prompt" class="prompt-big"></h1>
+    <div id="cd-number" class="countdown-number">5</div>
+    <p class="muted small">Get your fingers ready.</p>
+  </div>
+</section>
+
+<!-- ---------------------------------------------------------- COMPOSE -->
+<section id="screen-compose" class="screen">
+  <header class="studio-head">
+    <div class="head-left">
+      <p class="muted small" id="cp-context"></p>
+      <h2 id="cp-prompt" class="prompt-small"></h2>
+    </div>
+    <div class="head-mid">
+      <div id="cp-timer" class="timer">2:00</div>
+      <div class="timer-bar"><div id="cp-timer-fill"></div></div>
+    </div>
+    <div class="head-right">
+      <input id="cp-title" maxlength="40" placeholder="Name your track" autocomplete="off">
+      <button id="btn-submit" class="btn primary">Lock it in</button>
+    </div>
+  </header>
+
+  <div id="jam-banner" class="jam-banner" hidden>
+    <span id="jam-turn" class="jam-turn"></span>
+    <span id="jam-who"></span>
+    <span id="jam-note" class="muted small"></span>
+  </div>
+
+  <div class="studio">
+    <aside class="rack">
+      <div class="rack-group">
+        <button id="btn-play" class="btn play">▶ Play</button>
+        <button id="btn-dice" class="btn ghost" title="Generate a starter groove">🎲 Inspire me</button>
+        <button id="btn-clear" class="btn ghost">Clear</button>
+      </div>
+
+      <label class="knob preset-knob">
+        <span>Style preset</span>
+        <select id="set-preset">
+          <option value="">Pick a style…</option>
+        </select>
+        <span class="preset-blurb muted small" id="preset-blurb"></span>
+        <label class="preset-keep">
+          <input id="set-preset-keep" type="checkbox">
+          <span>Sound only, keep my notes</span>
+        </label>
+      </label>
+
+      <label class="knob">
+        <span>Tempo <b id="lbl-tempo">110</b> bpm</span>
+        <input id="set-tempo" type="range" min="60" max="170" value="110">
+      </label>
+
+      <label class="knob">
+        <span>Key</span>
+        <select id="set-root"></select>
+      </label>
+
+      <label class="knob">
+        <span>Scale</span>
+        <select id="set-scale"></select>
+      </label>
+
+      <label class="knob">
+        <span>Drum kit</span>
+        <select id="set-kit"></select>
+      </label>
+
+      <label class="knob">
+        <span>Guitar / lead</span>
+        <select id="set-leadwave"></select>
+      </label>
+
+      <label class="knob">
+        <span>Bass</span>
+        <select id="set-basswave"></select>
+      </label>
+
+      <label class="knob">
+        <span>Brightness</span>
+        <input id="set-cutoff" type="range" min="0" max="100" value="70">
+      </label>
+
+      <label class="knob">
+        <span>Swing</span>
+        <input id="set-swing" type="range" min="0" max="60" value="0">
+      </label>
+
+      <label class="knob check">
+        <input id="set-delay" type="checkbox">
+        <span>Echo</span>
+      </label>
+
+      <div class="rack-foot">
+        <p class="muted small">Notes snap to the key. Drag to paint.</p>
+      </div>
+    </aside>
+
+    <div class="grids" id="grids">
+      <div class="track">
+        <div class="track-head"><h3>Drums</h3></div>
+        <div class="grid-scroll"><div id="grid-drums" class="grid"></div></div>
+      </div>
+      <div class="track">
+        <div class="track-head"><h3>Bass</h3><span class="muted small">one note per column</span></div>
+        <div class="grid-scroll"><div id="grid-bass" class="grid"></div></div>
+      </div>
+      <div class="track">
+        <div class="track-head"><h3>Melody</h3></div>
+        <div class="grid-scroll"><div id="grid-lead" class="grid"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="studio-foot">
+    <ul id="compose-players" class="mini-players"></ul>
+    <button id="btn-skip-compose" class="btn ghost small host-only">Skip to voting</button>
+  </footer>
+</section>
+
+<!-- ----------------------------------------------------------- LISTEN -->
+<section id="screen-listen" class="screen">
+  <div class="listen-wrap">
+    <p class="muted small">Now playing <span id="ls-index"></span> &mdash; theme: <em id="ls-prompt"></em></p>
+    <h1 id="ls-title" class="track-title"></h1>
+    <p class="by">by <span id="ls-author"></span></p>
+
+    <div id="visualizer" class="visualizer"></div>
+
+    <div id="ls-rate" class="rate">
+      <p class="muted small">Rate it</p>
+      <div class="stars" id="stars"></div>
+      <p class="muted small" id="ls-votes"></p>
+    </div>
+    <p id="ls-own" class="muted own-song" hidden>This one is yours. Sit tight and look humble.</p>
+
+    <div class="react-bar" id="react-bar"></div>
+    <button id="btn-skip-listen" class="btn ghost small host-only">Skip song</button>
+  </div>
+</section>
+
+<!-- --------------------------------------------------------- JAM VOTE -->
+<section id="screen-jamvote" class="screen">
+  <div class="center-wrap">
+    <p class="muted small">After turn <span id="jv-turn"></span> &mdash; theme: <em id="jv-prompt"></em></p>
+    <h1 id="jv-title" class="track-title">Is it done?</h1>
+    <p class="muted">Have a listen. If everyone says done, that is the final version.</p>
+
+    <button id="btn-jv-listen" class="btn play jv-listen">▶ Listen to it</button>
+
+    <div class="jv-choice">
+      <button id="btn-done" class="btn big">✓ It&rsquo;s done</button>
+      <button id="btn-more" class="btn big primary">Another turn</button>
+    </div>
+    <p class="muted" id="jv-tally"></p>
+    <p class="muted small" id="jv-names"></p>
+    <p class="muted small" id="jv-left"></p>
+  </div>
+</section>
+
+<!-- --------------------------------------------------------- JAM DONE -->
+<section id="screen-jamdone" class="screen">
+  <div class="center-wrap">
+    <p class="muted small">Theme: <em id="jd-prompt"></em></p>
+    <h1 id="jd-title" class="track-title"></h1>
+    <p class="by">by <span id="jd-authors"></span></p>
+
+    <div id="jd-visualizer" class="visualizer"></div>
+
+    <button id="btn-jd-listen" class="btn play jv-listen">▶ Play it</button>
+    <p class="muted small" id="jd-turns"></p>
+    <div class="react-bar" id="jd-react-bar"></div>
+    <button id="btn-jd-lobby" class="btn ghost host-only">Back to the lobby</button>
+  </div>
+</section>
+
+<!-- ---------------------------------------------------------- RESULTS -->
+<section id="screen-results" class="screen">
+  <div class="results-wrap">
+    <h1 id="rs-heading">Round results</h1>
+    <p class="muted" id="rs-sub"></p>
+    <ol id="rs-board" class="board"></ol>
+    <div class="results-actions">
+      <button id="btn-replay" class="btn ghost">▶ Replay the winner</button>
+      <button id="btn-continue" class="btn primary host-only">Continue</button>
+      <p class="muted small" id="rs-wait"></p>
+    </div>
+  </div>
+</section>
+
+<script src="audio.js"></script>
+<script src="presets.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

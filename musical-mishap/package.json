@@ -1,0 +1,16 @@
+{
+  "name": "musical-mishap",
+  "version": "1.0.0",
+  "description": "A browser party game: everyone gets two minutes to write a song, then you all vote.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test/flow.test.js && node test/jam.test.js",
+    "test:clash": "node test/flow.test.js",
+    "test:jam": "node test/jam.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "private": true
+}
